@@ -11,8 +11,17 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
+        backgroundColor: const Color.fromARGB(255, 200, 199, 199),
         appBar: AppBar(
-          title: const Text('Zitat App'),
+          backgroundColor: Colors.blueGrey,
+          title: const Text(
+            'Zitat App',
+            style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                fontSize: 32,
+                fontFamily: '.SF UI Display'),
+          ),
         ),
         body: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -20,12 +29,24 @@ class MainApp extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const TextField(),
+                const TextField(
+                  decoration: InputDecoration(
+                      border: OutlineInputBorder(), labelText: 'Zitat'),
+                ),
                 const SizedBox(
                   height: 16,
                 ),
                 ElevatedButton(
-                    onPressed: () {}, child: const Text('Neues Zitat'))
+                  onPressed: () {},
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blueGrey,
+                      shadowColor: const Color.fromARGB(255, 137, 187, 212)),
+                  child: const Text(
+                    'Neues Zitat',
+                    style: TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
+                )
               ],
             ),
           ),
