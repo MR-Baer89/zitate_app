@@ -1,11 +1,37 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 void main() {
   runApp(const MainApp());
 }
 
-class MainApp extends StatelessWidget {
+class MainApp extends StatefulWidget {
   const MainApp({super.key});
+
+  @override
+  State<MainApp> createState() => _MainAppState();
+}
+
+class _MainAppState extends State<MainApp> {
+  String quote = '';
+  String author = '';
+
+  Future<void> fetchQuote() async {
+    final response = await http.get(
+        Uri.parse('https://api.api-ninjas.com/v1/quotes'),
+        headers: {'X-Api-Key': 'Fg1eV7NHdzj3Wp/VQx5AfQ==7coi7tcvw0zADpLu'});
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body)[0];
+      setState(() {
+        quote = data['quote'];
+        author = data['author'];
+      });
+    } else {
+      print('Request failed with status: ${response.statusCode}.');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,15 +55,18 @@ class MainApp extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const TextField(
-                  decoration: InputDecoration(
-                      border: OutlineInputBorder(), labelText: 'Zitat'),
+                Text(
+                  quote,
+                  style: const TextStyle(fontSize: 20),
                 ),
-                const SizedBox(
-                  height: 16,
+                const SizedBox(height: 16),
+                Text(
+                  '- $author',
+                  style: const TextStyle(fontStyle: FontStyle.italic),
                 ),
+                const SizedBox(height: 32),
                 ElevatedButton(
-                  onPressed: () {},
+                  onPressed: fetchQuote,
                   style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blueGrey,
                       shadowColor: const Color.fromARGB(255, 137, 187, 212)),
