@@ -1,21 +1,45 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
-  runApp(const MainApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  runApp(MyApp(prefs: prefs));
 }
 
-class MainApp extends StatefulWidget {
-  const MainApp({super.key});
+class MyApp extends StatefulWidget {
+  final SharedPreferences prefs;
+
+  const MyApp({super.key, required this.prefs});
 
   @override
-  State<MainApp> createState() => _MainAppState();
+  State<MyApp> createState() => _MyAppState();
 }
 
-class _MainAppState extends State<MainApp> {
+class _MyAppState extends State<MyApp> {
   String quote = '';
   String author = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadQuoteFromPrefs();
+  }
+
+  Future<void> _loadQuoteFromPrefs() async {
+    final savedQuote = widget.prefs.getString('quote');
+    final savedAuthor = widget.prefs.getString('author');
+    if (savedQuote != null && savedAuthor != null) {
+      setState(() {
+        quote = savedQuote;
+        author = savedAuthor;
+      });
+    } else {
+      fetchQuote();
+    }
+  }
 
   Future<void> fetchQuote() async {
     final response = await http.get(
@@ -27,10 +51,25 @@ class _MainAppState extends State<MainApp> {
       setState(() {
         quote = data['quote'];
         author = data['author'];
+        _saveQuoteToPrefs(quote, author);
       });
     } else {
       print('Request failed with status: ${response.statusCode}.');
     }
+  }
+
+  Future<void> _saveQuoteToPrefs(String quote, String author) async {
+    await widget.prefs.setString('quote', quote);
+    await widget.prefs.setString('author', author);
+  }
+
+  Future<void> _clearQuote() async {
+    await widget.prefs.remove('quote');
+    await widget.prefs.remove('author');
+    setState(() {
+      quote = '';
+      author = '';
+    });
   }
 
   @override
@@ -75,7 +114,11 @@ class _MainAppState extends State<MainApp> {
                     style: TextStyle(
                         color: Colors.white, fontWeight: FontWeight.bold),
                   ),
-                )
+                ),
+                ElevatedButton(
+                  onPressed: _clearQuote,
+                  child: const Text('Zitat löschen'),
+                ),
               ],
             ),
           ),
