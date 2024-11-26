@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as mr_baer;
@@ -58,7 +59,9 @@ class _MainAppState extends State<MainApp> {
         _saveQuoteToPrefs(quote, author);
       });
     } else {
-      print('Request failed with status: ${response.statusCode}.');
+      if (kDebugMode) {
+        print('Request failed with status: ${response.statusCode}.');
+      }
     }
   }
 
@@ -90,7 +93,9 @@ class _MainAppState extends State<MainApp> {
         _saveQuoteToPrefs(quote, author);
       });
     } else {
-      print('Request failed with status: ${response.statusCode}.');
+      if (kDebugMode) {
+        print('Request failed with status: ${response.statusCode}.');
+      }
     }
   }
 
