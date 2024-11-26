@@ -67,7 +67,7 @@ class _MainAppState extends State<MainApp> {
       });
     } else {
       if (kDebugMode) {
-        print('Request failed with status: ${response.statusCode}.');
+        print('Anforderung fehlgeschlagen mit Status: ${response.statusCode}.');
       }
     }
   }
@@ -101,7 +101,7 @@ class _MainAppState extends State<MainApp> {
       });
     } else {
       if (kDebugMode) {
-        print('Request failed with status: ${response.statusCode}.');
+        print('Anforderung fehlgeschlagen mit Status: ${response.statusCode}.');
       }
     }
   }
