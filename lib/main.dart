@@ -58,7 +58,6 @@ class _MainAppState extends State<MainApp> {
     }
   }
 
-  // Fetch a quote from the API
   Future<void> fetchQuoteForCategory(String category) async {
     final response = await mr_baer.get(
       Uri.parse('https://api.api-ninjas.com/v1/quotes?category=$category'),
