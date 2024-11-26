@@ -22,8 +22,15 @@ class MainApp extends StatefulWidget {
 class _MainAppState extends State<MainApp> {
   String quote = '';
   String author = '';
-  String selectedCategory = 'inspirational';
-  List<String> categories = ['inspirational', 'love', 'funny'];
+  String selectedCategory = 'humor';
+  List<String> categories = [
+    'humor',
+    'car',
+    'computer',
+    'funny',
+    'money',
+    'dating'
+  ];
 
   @override
   void initState() {
