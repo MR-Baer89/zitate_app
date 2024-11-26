@@ -1,31 +1,34 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:http/http.dart' as mr_baer;
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  runApp(MyApp(prefs: prefs));
+  runApp(MainApp(prefs: prefs));
 }
 
-class MyApp extends StatefulWidget {
+class MainApp extends StatefulWidget {
   final SharedPreferences prefs;
 
-  const MyApp({super.key, required this.prefs});
+  const MainApp({super.key, required this.prefs});
 
   @override
-  State<MyApp> createState() => _MyAppState();
+  State<MainApp> createState() => _MainAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MainAppState extends State<MainApp> {
   String quote = '';
   String author = '';
+  String selectedCategory = 'inspirational';
+  List<String> categories = ['inspirational', 'love', 'funny'];
 
   @override
   void initState() {
     super.initState();
     _loadQuoteFromPrefs();
+    fetchQuotesForCategory(selectedCategory);
   }
 
   Future<void> _loadQuoteFromPrefs() async {
@@ -42,9 +45,10 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> fetchQuote() async {
-    final response = await http.get(
-        Uri.parse('https://api.api-ninjas.com/v1/quotes'),
-        headers: {'X-Api-Key': 'Fg1eV7NHdzj3Wp/VQx5AfQ==7coi7tcvw0zADpLu'});
+    final response = await mr_baer.get(
+      Uri.parse('https://api.api-ninjas.com/v1/quotes'),
+      headers: {'X-Api-Key': 'Fg1eV7NHdzj3Wp/VQx5AfQ==7coi7tcvw0zADpLu'},
+    );
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body)[0];
@@ -70,6 +74,24 @@ class _MyAppState extends State<MyApp> {
       quote = '';
       author = '';
     });
+  }
+
+  Future<void> fetchQuotesForCategory(String category) async {
+    final response = await mr_baer.get(
+      Uri.parse('https://api.api-ninjas.com/v1/quotes?category=$category'),
+      headers: {'X-Api-Key': 'Fg1eV7NHdzj3Wp/VQx5AfQ==7coi7tcvw0zADpLu'},
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body)[0];
+      setState(() {
+        quote = data['quote'];
+        author = data['author'];
+        _saveQuoteToPrefs(quote, author);
+      });
+    } else {
+      print('Request failed with status: ${response.statusCode}.');
+    }
   }
 
   @override
@@ -107,17 +129,35 @@ class _MyAppState extends State<MyApp> {
                 ElevatedButton(
                   onPressed: fetchQuote,
                   style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blueGrey,
-                      shadowColor: const Color.fromARGB(255, 137, 187, 212)),
+                    backgroundColor: Colors.blueGrey,
+                    shadowColor: const Color.fromARGB(255, 137, 187, 212),
+                  ),
                   child: const Text(
                     'Neues Zitat',
                     style: TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.bold),
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 ElevatedButton(
                   onPressed: _clearQuote,
                   child: const Text('Zitat löschen'),
+                ),
+                DropdownButton<String>(
+                  value: selectedCategory,
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      selectedCategory = newValue!;
+                      fetchQuotesForCategory(selectedCategory);
+                    });
+                  },
+                  items: categories.toSet().map((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
                 ),
               ],
             ),
