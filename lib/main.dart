@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as mr_baer;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:translator/translator.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,6 +23,8 @@ class MainApp extends StatefulWidget {
 class _MainAppState extends State<MainApp> {
   String quote = '';
   String author = '';
+  String translatedQuote = '';
+  String translatedAuthor = '';
   String selectedCategory = 'humor';
   List<String> categories = [
     'humor',
@@ -31,12 +34,14 @@ class _MainAppState extends State<MainApp> {
     'money',
     'dating'
   ];
+  final translator = GoogleTranslator();
+  String targetLanguage = 'de';
 
   @override
   void initState() {
     super.initState();
     _loadQuoteFromPrefs();
-    fetchQuotesForCategory(selectedCategory);
+    fetchQuoteForCategory(selectedCategory);
   }
 
   Future<void> _loadQuoteFromPrefs() async {
@@ -47,14 +52,16 @@ class _MainAppState extends State<MainApp> {
         quote = savedQuote;
         author = savedAuthor;
       });
+      _translateQuoteAndAuthor();
     } else {
-      fetchQuote();
+      fetchQuoteForCategory(selectedCategory);
     }
   }
 
-  Future<void> fetchQuote() async {
+  // Fetch a quote from the API
+  Future<void> fetchQuoteForCategory(String category) async {
     final response = await mr_baer.get(
-      Uri.parse('https://api.api-ninjas.com/v1/quotes'),
+      Uri.parse('https://api.api-ninjas.com/v1/quotes?category=$category'),
       headers: {'X-Api-Key': 'Fg1eV7NHdzj3Wp/VQx5AfQ==7coi7tcvw0zADpLu'},
     );
 
@@ -65,6 +72,7 @@ class _MainAppState extends State<MainApp> {
         author = data['author'];
         _saveQuoteToPrefs(quote, author);
       });
+      _translateQuoteAndAuthor();
     } else {
       if (kDebugMode) {
         print('Anforderung fehlgeschlagen mit Status: ${response.statusCode}.');
@@ -83,25 +91,24 @@ class _MainAppState extends State<MainApp> {
     setState(() {
       quote = '';
       author = '';
+      translatedQuote = '';
+      translatedAuthor = '';
     });
   }
 
-  Future<void> fetchQuotesForCategory(String category) async {
-    final response = await mr_baer.get(
-      Uri.parse('https://api.api-ninjas.com/v1/quotes?category=$category'),
-      headers: {'X-Api-Key': 'Fg1eV7NHdzj3Wp/VQx5AfQ==7coi7tcvw0zADpLu'},
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body)[0];
+  Future<void> _translateQuoteAndAuthor() async {
+    try {
+      final translationQuote =
+          await translator.translate(quote, to: targetLanguage);
+      final translationAuthor =
+          await translator.translate(author, to: targetLanguage);
       setState(() {
-        quote = data['quote'];
-        author = data['author'];
-        _saveQuoteToPrefs(quote, author);
+        translatedQuote = translationQuote.text;
+        translatedAuthor = translationAuthor.text;
       });
-    } else {
+    } catch (e) {
       if (kDebugMode) {
-        print('Anforderung fehlgeschlagen mit Status: ${response.statusCode}.');
+        print('Translation failed: $e');
       }
     }
   }
@@ -129,17 +136,17 @@ class _MainAppState extends State<MainApp> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  quote,
+                  translatedQuote.isNotEmpty ? translatedQuote : quote,
                   style: const TextStyle(fontSize: 20),
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  '- $author',
+                  '- ${translatedAuthor.isNotEmpty ? translatedAuthor : author}',
                   style: const TextStyle(fontStyle: FontStyle.italic),
                 ),
                 const SizedBox(height: 32),
                 ElevatedButton(
-                  onPressed: fetchQuote,
+                  onPressed: () => fetchQuoteForCategory(selectedCategory),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blueGrey,
                     shadowColor: const Color.fromARGB(255, 137, 187, 212),
@@ -161,7 +168,8 @@ class _MainAppState extends State<MainApp> {
                   onChanged: (String? newValue) {
                     setState(() {
                       selectedCategory = newValue!;
-                      fetchQuotesForCategory(selectedCategory);
+                      fetchQuoteForCategory(
+                          selectedCategory); // Fetch new category
                     });
                   },
                   items: categories.toSet().map((String value) {
