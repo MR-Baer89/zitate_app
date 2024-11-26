@@ -121,7 +121,7 @@ class _MainAppState extends State<MainApp> {
         appBar: AppBar(
           backgroundColor: Colors.blueGrey,
           title: const Text(
-            'Zitat App',
+            'Zitate App',
             style: TextStyle(
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
